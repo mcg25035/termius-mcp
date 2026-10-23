@@ -1,4 +1,15 @@
 #!/usr/bin/env node
+
+// Subcommand: `termius-mcp setup` — detect agents and offer to configure them.
+// Everything after this runs the MCP server over stdio.
+if (process.argv[2] === "setup") {
+  require("./setup").cli(process.argv.slice(3)).then(() => process.exit(0)).catch((e) => {
+    console.error(e && e.message ? e.message : e);
+    process.exit(1);
+  });
+  return;
+}
+
 const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
 const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
 const { 
