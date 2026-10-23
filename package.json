@@ -12,8 +12,8 @@
   "author": "c0dingbear",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@c0dingbear/access-prompt": "file:../access-prompt",
-    "@c0dingbear/termius-vault": "file:../termius-vault",
+    "@c0dingbear/access-prompt": "^0.1.0",
+    "@c0dingbear/termius-vault": "^0.1.0",
     "ssh2": "^1.17.0"
   }
 }
