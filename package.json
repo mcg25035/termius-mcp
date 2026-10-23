@@ -1,6 +1,6 @@
 {
   "name": "@c0dingbear/termius-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP server that connects agents to your Termius machines: token-authorized SSH tunnels with a native GUI approval dialog, persistent shell/exec, background tasks, and SFTP file transfer. Includes `termius-mcp setup` to auto-detect and configure agents.",
   "main": "termius-mcp.js",
   "type": "commonjs",

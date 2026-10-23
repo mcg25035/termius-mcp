@@ -118,6 +118,24 @@ function agents() {
     });
   }
 
+  // Pi (earendil-works/pi coding agent) — ~/.pi/agent/mcp.json, mcpServers shape
+  {
+    const dir = path.join(os.homedir(), ".pi");
+    const file = path.join(dir, "agent", "mcp.json");
+    list.push({
+      id: "pi", label: "Pi", target: file,
+      detected: fs.existsSync(file) || fs.existsSync(dir) || hasCommand("pi"),
+      apply() {
+        const cfg = readJsonSafe(file) || {};
+        cfg.mcpServers = cfg.mcpServers || {};
+        if (cfg.mcpServers.termius) return { status: "exists", detail: file };
+        cfg.mcpServers.termius = genericEntry();
+        writeJson(file, cfg);
+        return { status: "added", detail: file };
+      }
+    });
+  }
+
   // Cursor
   {
     const file = path.join(os.homedir(), ".cursor", "mcp.json");

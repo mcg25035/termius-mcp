@@ -29,7 +29,7 @@ termius-mcp setup        # detect your agents and add the MCP config
 ```
 
 `termius-mcp setup` finds installed agents — **opencode, Claude Code, Claude
-Desktop, Cursor** — and offers to add the server to each (merges into the
+Desktop, Cursor, Pi** — and offers to add the server to each (merges into the
 existing config, backs it up first, and is idempotent). Flags: `--yes`
 (non-interactive), `--print` (just show the manual snippet).
 
