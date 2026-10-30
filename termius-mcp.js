@@ -1349,6 +1349,23 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("Termius MCP Server running on stdio transport");
+
+  // Exit when the client disconnects (its end of the stdio pipe closes).
+  // Without this the server lingers as an orphan after the agent restarts,
+  // and a stale orphan keeps serving old in-memory code — which is how a
+  // since-fixed bug (e.g. the proxy connect-chain) appears to persist across
+  // restarts. Close active tunnels on the way out.
+  const shutdown = () => {
+    try {
+      for (const t of activeTunnels.values()) {
+        try { if (t.sshClients) t.sshClients.forEach(c => c.end()); else if (t.sshClient) t.sshClient.end(); } catch {}
+      }
+    } catch {}
+    process.exit(0);
+  };
+  process.stdin.on("end", shutdown);
+  process.stdin.on("close", shutdown);
+  process.stdin.on("error", shutdown);
 }
 
 main().catch((err) => {
