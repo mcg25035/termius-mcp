@@ -170,6 +170,83 @@ function agents() {
     });
   }
 
+  // Windsurf (Codeium) — ~/.codeium/windsurf/mcp_config.json, mcpServers shape
+  {
+    const file = path.join(os.homedir(), ".codeium", "windsurf", "mcp_config.json");
+    list.push({
+      id: "windsurf", label: "Windsurf", target: file,
+      detected: fs.existsSync(file) || fs.existsSync(path.join(os.homedir(), ".codeium", "windsurf")),
+      apply() {
+        const cfg = readJsonSafe(file) || {};
+        cfg.mcpServers = cfg.mcpServers || {};
+        if (cfg.mcpServers.termius) return { status: "exists", detail: file };
+        cfg.mcpServers.termius = genericEntry();
+        writeJson(file, cfg);
+        return { status: "added", detail: file };
+      }
+    });
+  }
+
+  // Cline — cline_mcp_settings.json (VS Code extension or standalone CLI)
+  {
+    const vscode = path.join(configDir(), "Code", "User", "globalStorage", "saoudrizwan.claude-dev", "settings", "cline_mcp_settings.json");
+    const cli = path.join(os.homedir(), ".cline", "data", "settings", "cline_mcp_settings.json");
+    const file = fs.existsSync(vscode) ? vscode : (fs.existsSync(cli) ? cli : vscode);
+    list.push({
+      id: "cline", label: "Cline", target: file,
+      detected: fs.existsSync(vscode) || fs.existsSync(cli),
+      apply() {
+        const cfg = readJsonSafe(file) || {};
+        cfg.mcpServers = cfg.mcpServers || {};
+        if (cfg.mcpServers.termius) return { status: "exists", detail: file };
+        cfg.mcpServers.termius = genericEntry();
+        writeJson(file, cfg);
+        return { status: "added", detail: file };
+      }
+    });
+  }
+
+  // Zed — ~/.config/zed/settings.json, top-level `context_servers`
+  {
+    const file = path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config"), "zed", "settings.json");
+    list.push({
+      id: "zed", label: "Zed", target: file,
+      detected: fs.existsSync(file),
+      apply() {
+        const cfg = readJsonSafe(file) || {};
+        cfg.context_servers = cfg.context_servers || {};
+        if (cfg.context_servers.termius) return { status: "exists", detail: file };
+        const entry = { source: "custom", command: "termius-mcp", args: [] };
+        if (envBlock) entry.env = envBlock;
+        cfg.context_servers.termius = entry;
+        writeJson(file, cfg);
+        return { status: "added", detail: file };
+      }
+    });
+  }
+
+  // Continue — a standalone block file under ~/.continue/mcpServers/ (so we
+  // never have to merge into the user's main config.yaml).
+  {
+    const dir = path.join(os.homedir(), ".continue");
+    const file = path.join(dir, "mcpServers", "termius.yaml");
+    list.push({
+      id: "continue", label: "Continue", target: file,
+      detected: fs.existsSync(dir),
+      apply() {
+        if (fs.existsSync(file)) return { status: "exists", detail: file };
+        let yaml = "name: Termius\nversion: 0.0.1\nschema: v1\nmcpServers:\n  - name: termius\n    command: termius-mcp\n";
+        if (envBlock) {
+          yaml += "    env:\n";
+          for (const [k, v] of Object.entries(envBlock)) yaml += `      ${k}: ${JSON.stringify(v)}\n`;
+        }
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, yaml);
+        return { status: "added", detail: file };
+      }
+    });
+  }
+
   // Cursor
   {
     const file = path.join(os.homedir(), ".cursor", "mcp.json");
