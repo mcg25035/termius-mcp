@@ -62,6 +62,38 @@ termius-mcp              # speaks MCP over stdio
 `DISPLAY` (Linux) must point at your desktop session so the approval dialog can
 appear. Requires the Termius desktop app installed and logged in.
 
+## Add your agent
+
+Don't see your agent / harness in the list? Adding one is a small, self-contained
+change — [**edit `setup.js` and open a PR**](https://github.com/mcg25035/termius-mcp/edit/master/setup.js).
+
+Each agent is one entry in the `agents()` list: a `detected` check (does its
+config file / CLI exist?) and an `apply()` that merges the server into its config
+(back up first, and no-op if it's already there). Most agents use the common
+`mcpServers` JSON shape, so you can copy an existing block like Cursor's:
+
+```js
+// My Agent — ~/.myagent/mcp.json, mcpServers shape
+{
+  const file = path.join(os.homedir(), ".myagent", "mcp.json");
+  list.push({
+    id: "myagent", label: "My Agent", target: file,
+    detected: fs.existsSync(file) || hasCommand("myagent"),
+    apply() {
+      const cfg = readJsonSafe(file) || {};
+      cfg.mcpServers = cfg.mcpServers || {};
+      if (cfg.mcpServers.termius) return { status: "exists", detail: file };
+      cfg.mcpServers.termius = genericEntry();   // { command: "termius-mcp", env?: { DISPLAY } }
+      writeJson(file, cfg);
+      return { status: "added", detail: file };
+    }
+  });
+}
+```
+
+For a different schema (TOML like Codex, a `context_servers`/`servers` key, or a
+YAML block file), see the Codex, Zed, VS Code and Continue entries for patterns.
+
 ## License
 
 MIT
