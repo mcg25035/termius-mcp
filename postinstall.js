@@ -21,7 +21,8 @@
       console.log("\n[termius-mcp] " + (found.length
         ? `Detected: ${found.map(a => a.label).join(", ")}.`
         : "No agents detected."));
-      console.log("[termius-mcp] Run `termius-mcp setup` to configure your agent.\n");
+      console.log("[termius-mcp] Run `termius-mcp setup` to configure your agent.");
+      console.log("[termius-mcp] " + setup.CONTRIBUTE.replace(/\n\s*/g, " ") + "\n");
       return;
     }
 

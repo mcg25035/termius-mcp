@@ -381,17 +381,25 @@ function promptYesNo(question, ms) {
   });
 }
 
+// Shown after every run so people can contribute a detector for an agent we
+// don't cover yet. The GitHub "edit file" link opens setup.js ready to fork,
+// edit, and open a pull request in one flow.
+const CONTRIBUTE =
+  "Don't see your agent / harness? Add it in a quick PR:\n" +
+  "  https://github.com/mcg25035/termius-mcp/edit/master/setup.js";
+
 // CLI: `termius-mcp setup [--yes] [--print]`
 async function cli(argv) {
   const yes = argv.includes("--yes") || argv.includes("-y");
   const printOnly = argv.includes("--print");
   const found = detectAgents();
 
-  if (printOnly) { console.log(manualHint()); return; }
+  if (printOnly) { console.log(manualHint()); console.log("\n" + CONTRIBUTE); return; }
 
   if (!found.length) {
-    console.log("No supported agents detected (opencode, Claude Code, Claude Desktop, Cursor).");
+    console.log("No supported agents detected.");
     console.log(manualHint());
+    console.log("\n" + CONTRIBUTE);
     return;
   }
 
@@ -401,11 +409,16 @@ async function cli(argv) {
     const ans = await promptYesNo("Add the termius MCP server to them now? [Y/n] ", 30000);
     go = ans === true || ans === null && false; // in explicit `setup`, null (timeout) = no
   }
-  if (!go) { console.log("Skipped. Run `termius-mcp setup --yes` to configure non-interactively."); return; }
+  if (!go) {
+    console.log("Skipped. Run `termius-mcp setup --yes` to configure non-interactively.");
+    console.log("\n" + CONTRIBUTE);
+    return;
+  }
 
   console.log("Configuring:");
   applyTo(found);
   console.log("Done. Restart your agent to pick up the new MCP server.");
+  console.log("\n" + CONTRIBUTE);
 }
 
-module.exports = { detectAgents, applyTo, promptYesNo, manualHint, cli };
+module.exports = { detectAgents, applyTo, promptYesNo, manualHint, cli, CONTRIBUTE };
