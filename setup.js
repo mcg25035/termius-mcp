@@ -136,6 +136,40 @@ function agents() {
     });
   }
 
+  // Codex (OpenAI codex CLI) — ~/.codex/config.toml, [mcp_servers.<name>] TOML
+  {
+    const home = process.env.CODEX_HOME || path.join(os.homedir(), ".codex");
+    const file = path.join(home, "config.toml");
+    list.push({
+      id: "codex", label: "Codex", target: file,
+      detected: fs.existsSync(file) || fs.existsSync(home) || hasCommand("codex"),
+      apply() {
+        let existing = "";
+        try { existing = fs.readFileSync(file, "utf8"); } catch {}
+        if (/\[mcp_servers\.termius\]/.test(existing)) return { status: "exists", detail: file };
+        // Prefer the CLI, which writes the TOML table correctly.
+        if (hasCommand("codex")) {
+          const args = ["mcp", "add", "termius"];
+          if (envBlock) for (const [k, v] of Object.entries(envBlock)) args.push("--env", `${k}=${v}`);
+          args.push("--", "termius-mcp");
+          execFileSync("codex", args, { stdio: "ignore" });
+          return { status: "added", detail: `${file} (codex mcp add)` };
+        }
+        // Fallback: append a TOML table (order-independent in TOML, so appending
+        // is safe as long as the table isn't already present).
+        let block = `\n[mcp_servers.termius]\ncommand = "termius-mcp"\n`;
+        if (envBlock) {
+          block += `\n[mcp_servers.termius.env]\n`;
+          for (const [k, v] of Object.entries(envBlock)) block += `${k} = ${JSON.stringify(v)}\n`;
+        }
+        fs.mkdirSync(home, { recursive: true });
+        backup(file);
+        fs.appendFileSync(file, block);
+        return { status: "added", detail: file };
+      }
+    });
+  }
+
   // Cursor
   {
     const file = path.join(os.homedir(), ".cursor", "mcp.json");
