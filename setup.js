@@ -264,6 +264,80 @@ function agents() {
     });
   }
 
+  // Antigravity (Google) — ~/.gemini/config/mcp_config.json, mcpServers shape.
+  // (Gemini CLI was folded into Antigravity; it reuses the ~/.gemini namespace.)
+  {
+    const dir = path.join(os.homedir(), ".gemini");
+    const file = path.join(dir, "config", "mcp_config.json");
+    list.push({
+      id: "antigravity", label: "Antigravity", target: file,
+      detected: fs.existsSync(file) || fs.existsSync(path.join(dir, "config")) || fs.existsSync(dir),
+      apply() {
+        const cfg = readJsonSafe(file) || {};
+        cfg.mcpServers = cfg.mcpServers || {};
+        if (cfg.mcpServers.termius) return { status: "exists", detail: file };
+        cfg.mcpServers.termius = genericEntry();
+        writeJson(file, cfg);
+        return { status: "added", detail: file };
+      }
+    });
+  }
+
+  // Amazon Q Developer CLI — ~/.aws/amazonq/mcp.json, mcpServers shape
+  {
+    const dir = path.join(os.homedir(), ".aws", "amazonq");
+    const file = path.join(dir, "mcp.json");
+    list.push({
+      id: "amazon-q", label: "Amazon Q", target: file,
+      detected: fs.existsSync(dir) || hasCommand("q"),
+      apply() {
+        const cfg = readJsonSafe(file) || {};
+        cfg.mcpServers = cfg.mcpServers || {};
+        if (cfg.mcpServers.termius) return { status: "exists", detail: file };
+        cfg.mcpServers.termius = genericEntry();
+        writeJson(file, cfg);
+        return { status: "added", detail: file };
+      }
+    });
+  }
+
+  // Kilo Code — VS Code extension globalStorage mcp_settings.json, mcpServers shape
+  {
+    const file = path.join(configDir(), "Code", "User", "globalStorage", "kilocode.kilo-code", "settings", "mcp_settings.json");
+    list.push({
+      id: "kilo-code", label: "Kilo Code", target: file,
+      detected: fs.existsSync(path.dirname(file)) || fs.existsSync(file),
+      apply() {
+        const cfg = readJsonSafe(file) || {};
+        cfg.mcpServers = cfg.mcpServers || {};
+        if (cfg.mcpServers.termius) return { status: "exists", detail: file };
+        cfg.mcpServers.termius = genericEntry();
+        writeJson(file, cfg);
+        return { status: "added", detail: file };
+      }
+    });
+  }
+
+  // VS Code (native MCP / Copilot agent) — user-level mcp.json, `servers` key
+  // with a per-server `type`.
+  {
+    const file = path.join(configDir(), "Code", "User", "mcp.json");
+    list.push({
+      id: "vscode", label: "VS Code", target: file,
+      detected: fs.existsSync(path.join(configDir(), "Code", "User")),
+      apply() {
+        const cfg = readJsonSafe(file) || {};
+        cfg.servers = cfg.servers || {};
+        if (cfg.servers.termius) return { status: "exists", detail: file };
+        const entry = { type: "stdio", command: "termius-mcp", args: [] };
+        if (envBlock) entry.env = envBlock;
+        cfg.servers.termius = entry;
+        writeJson(file, cfg);
+        return { status: "added", detail: file };
+      }
+    });
+  }
+
   return list;
 }
 
